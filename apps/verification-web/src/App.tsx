@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { analyze, getHistory, getResult, reset, type UIResult } from './api';
+import { analyze, getHistory, getResult, reset, UnauthorizedError, type UIResult } from './api';
+import { getToken, clearToken } from './auth';
+import { LoginPage } from './LoginPage';
 
 export function App() {
+  const [authed, setAuthed] = useState<boolean>(() => getToken() !== null);
   const [input, setInput] = useState('');
   const [result, setResult] = useState<UIResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -9,12 +12,18 @@ export function App() {
   const [pending, setPending] = useState(false);
 
   async function refresh() {
-    setHistory(await getHistory(10));
+    try {
+      setHistory(await getHistory(10));
+    } catch (e) {
+      if (e instanceof UnauthorizedError) {
+        setAuthed(false);
+      }
+    }
   }
 
   useEffect(() => {
-    refresh();
-  }, []);
+    if (authed) refresh();
+  }, [authed]);
 
   async function onAnalyze() {
     if (!input.trim()) {
@@ -28,6 +37,10 @@ export function App() {
       setResult(r);
       await refresh();
     } catch (e: any) {
+      if (e instanceof UnauthorizedError) {
+        setAuthed(false);
+        return;
+      }
       setError(String(e?.message ?? e));
       setResult(null);
     } finally {
@@ -41,6 +54,10 @@ export function App() {
       setResult(r);
       setError(null);
     } catch (e: any) {
+      if (e instanceof UnauthorizedError) {
+        setAuthed(false);
+        return;
+      }
       setError(String(e?.message ?? e));
     }
   }
@@ -52,6 +69,19 @@ export function App() {
     await refresh();
   }
 
+  function onLogout() {
+    clearToken();
+    setAuthed(false);
+    setResult(null);
+    setHistory([]);
+    setInput('');
+    setError(null);
+  }
+
+  if (!authed) {
+    return <LoginPage onLoggedIn={() => setAuthed(true)} />;
+  }
+
   const confidencePct =
     result && result.confidence != null && Number.isFinite(result.confidence)
       ? `${Math.round(result.confidence * 100)}%`
@@ -59,9 +89,14 @@ export function App() {
 
   return (
     <div className="wrap">
-      <header>
-        <h1>Content Verification Workbench</h1>
-        <p className="tagline">Paste a social-media claim. We&apos;ll classify it.</p>
+      <header className="app-header">
+        <div>
+          <h1>Content Verification Workbench</h1>
+          <p className="tagline">Paste a social-media claim. We&apos;ll classify it.</p>
+        </div>
+        <button onClick={onLogout} className="secondary" data-testid="logout-btn">
+          Log out
+        </button>
       </header>
 
       <section className="input">

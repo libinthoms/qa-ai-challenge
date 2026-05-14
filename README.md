@@ -69,13 +69,24 @@ npx nx run-many --target=serve --parallel=2
 
 ## API surface (port 3333)
 
-| Method | Path                | Notes                                     |
-| ------ | ------------------- | ----------------------------------------- |
-| GET    | `/health`           | Liveness                                  |
-| POST   | `/api/analyze`      | Body: `{ input: string }` → analysis      |
-| GET    | `/api/history`      | `?limit=N` (default 10)                   |
-| GET    | `/api/result/:id`   | Single analysis or 404                    |
-| POST   | `/api/reset`        | Clears state                              |
+| Method | Path                | Auth      | Notes                                     |
+| ------ | ------------------- | --------- | ----------------------------------------- |
+| GET    | `/health`           | Public    | Liveness                                  |
+| POST   | `/api/analyze`      | Required  | Body: `{ input: string }` → analysis      |
+| GET    | `/api/history`      | Required  | `?limit=N` (default 10)                   |
+| GET    | `/api/result/:id`   | Required  | Single analysis or 404                    |
+| POST   | `/api/reset`        | Required  | Clears state                              |
+
+## Authentication
+
+The web app gates access behind a sign-in screen. There are two hardcoded users:
+
+| Username   | Password      |
+| ---------- | ------------- |
+| `qa-tester`| `password123` |
+| `admin`    | `admin123`    |
+
+There is **no** `POST /api/auth/login` endpoint.
 
 ## Resetting local state
 
