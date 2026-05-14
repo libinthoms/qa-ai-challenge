@@ -69,13 +69,48 @@ npx nx run-many --target=serve --parallel=2
 
 ## API surface (port 3333)
 
-| Method | Path                | Notes                                     |
-| ------ | ------------------- | ----------------------------------------- |
-| GET    | `/health`           | Liveness                                  |
-| POST   | `/api/analyze`      | Body: `{ input: string }` → analysis      |
-| GET    | `/api/history`      | `?limit=N` (default 10)                   |
-| GET    | `/api/result/:id`   | Single analysis or 404                    |
-| POST   | `/api/reset`        | Clears state                              |
+| Method | Path                | Auth      | Notes                                     |
+| ------ | ------------------- | --------- | ----------------------------------------- |
+| GET    | `/health`           | Public    | Liveness                                  |
+| POST   | `/api/analyze`      | Required  | Body: `{ input: string }` → analysis      |
+| GET    | `/api/history`      | Required  | `?limit=N` (default 10)                   |
+| GET    | `/api/result/:id`   | Required  | Single analysis or 404                    |
+| POST   | `/api/reset`        | Required  | Clears state                              |
+
+Protected endpoints expect a bearer token:
+
+```
+Authorization: Bearer <token>
+```
+
+A 401 response is returned when the header is missing or the token is invalid.
+
+## Authentication
+
+The web app gates access behind a sign-in screen. There are two hardcoded users:
+
+| Username   | Password      |
+| ---------- | ------------- |
+| `qa-tester`| `password123` |
+| `admin`    | `admin123`    |
+
+There is **no** `POST /api/auth/login` endpoint. Login is handled client-side — the UI maps each user to a long-lived bearer token and persists it in the browser after sign-in. Use the **Log out** button in the header to clear the session.
+
+### Getting a token for API tests
+
+Your API tests do **not** call any login endpoint. Sign in once via the UI, then extract the token from the browser and pass it to your test suite (e.g. as an env var):
+
+```bash
+export AUTH_TOKEN=<token-you-pulled-from-the-browser>
+```
+
+Then attach it to every request your tests make:
+
+```
+Authorization: Bearer ${AUTH_TOKEN}
+```
+
+How you locate the token is part of the exercise.
 
 ## Resetting local state
 

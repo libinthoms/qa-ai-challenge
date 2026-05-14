@@ -44,3 +44,11 @@ button.secondary { background: #fff; color: #24292f; border-color: #d0d7de; }
 .history-list code { font-size: 12px; color: #57606a; }
 .claim-snippet { color: #24292f; }
 .muted { color: #57606a; font-size: 14px; }
+
+.app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+
+form label { display: block; margin: 8px 0 4px; font-size: 13px; color: #24292f; }
+form input[type="text"], form input[type="password"] {
+  width: 100%; padding: 8px 10px; font: inherit; border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
